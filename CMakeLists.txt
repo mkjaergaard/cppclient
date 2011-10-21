@@ -47,7 +47,7 @@ macro(generate PKG)
      show(THESEDEPS)
 
      add_custom_command(OUTPUT ${OUTPUT}
-       DEPENDS ${MSG} ${THESEDEPS} ${GENCPP_EXE}
+       DEPENDS ${INPUT_FULLPATH} ${THESEDEPS} ${GENCPP_EXE}
        COMMAND ${GENCPP_EXE} ${INPUT_FULLPATH}
        -p ${PKG}
        -o ${CMAKE_CURRENT_BINARY_DIR}/${PKG}
@@ -63,7 +63,9 @@ macro(generate PKG)
     )
 
   show(DEP_TARGETS)
-  add_dependencies(${PKG}_gencpp "${DEP_TARGETS}")
+  if(DEP_TARGETS)
+    add_dependencies(${PKG}_gencpp ${DEP_TARGETS})
+  endif(DEP_TARGETS)
 endmacro()
 
 
@@ -77,31 +79,13 @@ generate(std_msgs
   MESSAGES Header.msg
   )
 generate(geometry_msgs
-  MESSAGES Quaternion.msg Vector3.msg
+  MESSAGES Quaternion.msg Vector3.msg Point.msg
   DEPENDENCIES std_msgs
   )
 generate(sensor_msgs
-  MESSAGES Imu.msg
+  MESSAGES Imu.msg LaserScan.msg
   DEPENDENCIES geometry_msgs std_msgs
   )
-
-# generate(std_msgs 
-#   /home/morten/genmsg/test/files/std_msgs/msg/Header.msg)
-# 
-# generate(geometry_msgs 
-#   /home/morten/genmsg/test/files/geometry_msgs/msg/Quaternion.msg
-#   std_msgs
-#   )
-# 
-# generate(geometry_msgs 
-#   /home/morten/genmsg/test/files/geometry_msgs/msg/Vector3.msg
-#   std_msgs
-#   )
-# 
-# generate(sensor_msgs 
-#   /home/morten/genmsg/test/files/sensor_msgs/msg/Imu.msg
-#   std_msgs
-#   geometry_msgs)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(
@@ -110,28 +94,18 @@ include_directories(
   /opt/ros/electric/stacks/ros_comm/clients/cpp/roscpp_serialization/include/
   /opt/ros/electric/stacks/ros_comm/clients/cpp/roscpp_traits/include/)
 
-# add_custom_target(generate_cpp
-#    DEPENDS 
-#    sensor_msgs/Imu.h
-#    std_msgs/Header.h
-#    geometry_msgs/Quaternion.h
-#    geometry_msgs/Vector3.h
-#  )
-
 add_executable(main main.cpp)
-add_executable(main2 main.cpp)
 
 add_dependencies(main sensor_msgs_gencpp)
-#add_dependencies(main2 generate_cpp)
 
 # use this to provoke removal of generated headers
 set_directory_properties(PROPERTIES
   CLEAN_NO_CUSTOM FALSE
   )
 
-set_source_files_properties(
-  std_msgs/Header.h 
-  geometry_msgs/Vector3.h
-  geometry_msgs/Quaternion.h
-  PROPERTIES
-  GENERATED TRUE)
+#set_source_files_properties(
+#  std_msgs/Header.h 
+#  geometry_msgs/Vector3.h
+#  geometry_msgs/Quaternion.h
+#  PROPERTIES
+#  GENERATED TRUE)
